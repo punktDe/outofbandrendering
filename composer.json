@@ -1,0 +1,20 @@
+{
+    "description": "",
+    "type": "neos-package",
+    "name": "punktde/outofbandrendering",
+    "require": {
+        "neos/flow": "*",
+        "neos/neos": "*",
+        "neos/eel": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PunktDe\\OutOfBandRendering\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "PunktDe.OutOfBandRendering"
+        }
+    }
+}
