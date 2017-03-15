@@ -95,7 +95,10 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      */
     protected function buildControllerContext()
     {
-        $httpRequest = Http\Request::create(new Http\Uri('https://punkt.de'));
+        $schemeAndHost = 'https://punkt.de/';
+
+        $httpRequest = Http\Request::create(new Http\Uri($schemeAndHost));
+        $httpRequest->setBaseUri(new Http\Uri($schemeAndHost));
 
         return new Mvc\Controller\ControllerContext(
             new Mvc\ActionRequest($httpRequest),
