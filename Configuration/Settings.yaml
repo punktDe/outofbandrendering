@@ -1,0 +1,6 @@
+Neos:
+  Flow:
+    resource:
+      targets:
+        localWebDirectoryPersistentResourcesTarget:
+          target: 'PunktDe\OutOfBandRendering\ResourceManagement\CommandRequestAwareFileSystemSymlinkTarget'
