@@ -25,6 +25,18 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
     }
 
     /**
+     * @param string $nodeIdentifier
+     * @param string $fusionPath
+     * @param string $workspace
+     * @param array $contextData
+     * @return string
+     */
+    public function renderByIdentifier($nodeIdentifier, $fusionPath, $workspace = 'live', array $contextData = [])
+    {
+        return $this->fusionRenderingService->renderByIdentifier($nodeIdentifier, $fusionPath);
+    }
+
+    /**
      * @param string $methodName
      * @return bool
      */
