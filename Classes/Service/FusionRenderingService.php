@@ -3,6 +3,7 @@ namespace PunktDe\OutOfBandRendering\Service;
 
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\I18n\Exception\InvalidLocaleIdentifierException;
 use Neos\Fusion\Core\Runtime;
 use Neos\Neos\Controller\CreateContentContextTrait;
 use Neos\Flow\Http;
@@ -50,14 +51,22 @@ class FusionRenderingService
      */
     public function render(NodeInterface $node, $fusionPath, array $contextData = [])
     {
+        if (!$node instanceof NodeInterface || $node === null) {
+            return '';
+        }
+
         $currentSiteNode = $node->getContext()->getCurrentSiteNode();
         $fusionRuntime = $this->getFusionRuntime($currentSiteNode);
 
         $dimensions = $node->getContext()->getDimensions();
         if (array_key_exists('language', $dimensions) && $dimensions['language'] !== []) {
-            $currentLocale = new Locale($dimensions['language'][0]);
-            $this->i18nService->getConfiguration()->setCurrentLocale($currentLocale);
-            $this->i18nService->getConfiguration()->setFallbackRule(['strict' => false, 'order' => array_reverse($dimensions['language'])]);
+            try {
+                $currentLocale = new Locale($dimensions['language'][0]);
+                $this->i18nService->getConfiguration()->setCurrentLocale($currentLocale);
+                $this->i18nService->getConfiguration()->setFallbackRule(['strict' => false, 'order' => array_reverse($dimensions['language'])]);
+            } catch (InvalidLocaleIdentifierException $e) {
+                // TODO: implement logging
+            }
         }
 
         $fusionRuntime->pushContextArray(array_merge([
@@ -66,9 +75,16 @@ class FusionRenderingService
             'site' => $currentSiteNode,
             'editPreviewMode' => null,
         ], $contextData));
-        $output = $fusionRuntime->render($fusionPath);
-        $fusionRuntime->popContext();
-        return $output;
+
+        try {
+            $output = $fusionRuntime->render($fusionPath);
+            $fusionRuntime->popContext();
+            return $output;
+        } catch (\Exception $e) {
+            // TODO: implement logging
+        }
+
+        return '';
     }
 
     /**
@@ -81,7 +97,10 @@ class FusionRenderingService
     public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = []): string {
         $context = $this->createContentContext($workspace);
         $node = $context->getNodeByIdentifier($nodeIdentifier);
-        return $this->render($node, $fusionPath, $contextData);
+        if ($node !== null) {
+            return $this->render($node, $fusionPath, $contextData);
+        }
+        return '';
     }
 
     /**
