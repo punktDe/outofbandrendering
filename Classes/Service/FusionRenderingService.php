@@ -4,6 +4,7 @@ namespace PunktDe\OutOfBandRendering\Service;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Exception\InvalidLocaleIdentifierException;
+use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Fusion\Core\Runtime;
 use Neos\Neos\Controller\CreateContentContextTrait;
 use Neos\Flow\Http;
@@ -32,6 +33,12 @@ class FusionRenderingService
      * @var FusionService
      */
     protected $fusionService;
+
+    /**
+     * @Flow\InjectConfiguration(path="urlSchemaAndHost")
+     * @var string
+     */
+    protected $urlSchemeAndHost;
 
     /**
      * @var array
@@ -104,16 +111,14 @@ class FusionRenderingService
     }
 
     /**
-     * @return Mvc\Controller\ControllerContext
+     * @return ControllerContext
      */
     protected function buildControllerContext()
     {
-        $schemeAndHost = 'https://punkt.de/';
+        $httpRequest = Http\Request::create(new Http\Uri($this->urlSchemeAndHost));
+        $httpRequest->setBaseUri(new Http\Uri($this->urlSchemeAndHost));
 
-        $httpRequest = Http\Request::create(new Http\Uri($schemeAndHost));
-        $httpRequest->setBaseUri(new Http\Uri($schemeAndHost));
-
-        return new Mvc\Controller\ControllerContext(
+        return new ControllerContext(
             new Mvc\ActionRequest($httpRequest),
             new Http\Response(),
             new Mvc\Controller\Arguments(),
