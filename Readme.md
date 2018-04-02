@@ -1,6 +1,6 @@
 # Punktde.OutOfBandRendering
 
-Supplies a EelHelper to do out of band rendering of fusion objects.
+Supplies an EelHelper to do out of band rendering of fusion objects.
 
 This can be useful to render snippets for quick-links in search.
 
@@ -15,6 +15,6 @@ Settings.yaml
             FusionRendering: PunktDe\OutOfBandRendering\Eel\FusionRenderingHelper
 
 
-Render the quick-link during index time:
+Render the quick-link during index time using the given prototypePath:
 
-      indexing: '${FusionRendering.render(node, "quickLinkSnippet")}'
+      indexing: '${FusionRendering.render(node, "pathToProtoType")}'
