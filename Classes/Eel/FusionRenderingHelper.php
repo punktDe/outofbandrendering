@@ -1,6 +1,14 @@
 <?php
 namespace PunktDe\OutOfBandRendering\Eel;
 
+/*
+ * This file is part of the PunktDe.OutOfBandRendering package.
+ *
+ * This package is open source software. For the full copyright and license
+ * information, please view the LICENSE file which was distributed with this
+ * source code.
+ */
+
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Eel\ProtectedContextAwareInterface;
 use Neos\Flow\Annotations as Flow;
@@ -18,6 +26,8 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      * @param NodeInterface $node
      * @param string $fusionPath
      * @return string
+     * @throws \Neos\Fusion\Exception
+     * @throws \Neos\Neos\Domain\Exception
      */
     public function render(NodeInterface $node, $fusionPath)
     {
@@ -30,6 +40,8 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      * @param string $workspace
      * @param array $contextData
      * @return string
+     * @throws \Neos\Fusion\Exception
+     * @throws \Neos\Neos\Domain\Exception
      */
     public function renderByIdentifier($nodeIdentifier, $fusionPath, $workspace = 'live', array $contextData = [])
     {
