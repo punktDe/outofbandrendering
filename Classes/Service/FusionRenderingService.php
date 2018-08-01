@@ -9,14 +9,11 @@ namespace PunktDe\OutOfBandRendering\Service;
  * source code.
  */
 
-use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
+use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\I18n\Exception\InvalidLocaleIdentifierException;
-use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Fusion\Core\Runtime;
 use Neos\Neos\Controller\CreateContentContextTrait;
-use Neos\Flow\Http;
-use Neos\Flow\Mvc;
 use Neos\Flow\I18n\Service;
 use Neos\Flow\I18n\Locale;
 use Neos\Neos\Domain\Service\FusionService;
@@ -43,21 +40,15 @@ class FusionRenderingService
     protected $fusionService;
 
     /**
-     * @Flow\InjectConfiguration(path="urlSchemaAndHost")
-     * @var string
+     * @Flow\Inject
+     * @var ContextBuilder
      */
-    protected $urlSchemeAndHost;
+    protected $contextBuilder;
 
     /**
      * @var array
      */
     protected $options = ['enableContentCache' => true];
-
-    public function initializeObject()
-    {
-        // we want to have nice URLs
-        putenv('FLOW_REWRITEURLS=1');
-    }
 
     /**
      * @param NodeInterface $node
@@ -131,22 +122,6 @@ class FusionRenderingService
     }
 
     /**
-     * @return ControllerContext
-     */
-    protected function buildControllerContext(): ControllerContext
-    {
-        $httpRequest = Http\Request::create(new Http\Uri($this->urlSchemeAndHost));
-        $httpRequest->setBaseUri(new Http\Uri($this->urlSchemeAndHost));
-
-        return new ControllerContext(
-            new Mvc\ActionRequest($httpRequest),
-            new Http\Response(),
-            new Mvc\Controller\Arguments(),
-            new Mvc\Routing\UriBuilder()
-        );
-    }
-
-    /**
      * @param NodeInterface $currentSiteNode
      * @return Runtime
      * @throws \Neos\Fusion\Exception
@@ -155,7 +130,7 @@ class FusionRenderingService
     protected function getFusionRuntime(NodeInterface $currentSiteNode): Runtime
     {
         if ($this->fusionRuntime === null) {
-            $this->fusionRuntime = $this->fusionService->createRuntime($currentSiteNode, $this->buildControllerContext());
+            $this->fusionRuntime = $this->fusionService->createRuntime($currentSiteNode, $this->contextBuilder->buildControllerContext());
 
             if (isset($this->options['enableContentCache']) && $this->options['enableContentCache'] !== null) {
                 $this->fusionRuntime->setEnableContentCache($this->options['enableContentCache']);
