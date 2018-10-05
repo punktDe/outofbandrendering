@@ -1,5 +1,7 @@
 # Punktde.OutOfBandRendering
 
+[![Latest Stable Version](https://poser.pugx.org/punktde/outofbandrendering/v/stable)](https://packagist.org/packages/punktde/outofbandrendering) [![Total Downloads](https://poser.pugx.org/punktde/outofbandrendering/downloads)](https://packagist.org/packages/punktde/outofbandrendering)
+
 Supplies an EelHelper to do out of band rendering of fusion objects.
 
 This can be useful for example to render complex input for indexing into an Elasticsearch index. 
