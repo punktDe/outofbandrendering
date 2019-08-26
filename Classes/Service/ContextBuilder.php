@@ -39,6 +39,7 @@ class ContextBuilder
     protected $requestFactory;
 
     /**
+     * @Flow\Inject
      * @var Mvc\ActionRequestFactory
      */
     protected $actionRequestFactory;
