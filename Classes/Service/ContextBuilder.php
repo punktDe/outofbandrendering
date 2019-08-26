@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace PunktDe\OutOfBandRendering\Service;
 
 /*
@@ -6,10 +8,12 @@ namespace PunktDe\OutOfBandRendering\Service;
  *  All rights reserved.
  */
 
+use Neos\Flow\Http\ServerRequestAttributes;
 use Neos\Flow\Mvc\Controller\ControllerContext;
-use Neos\Flow\Http;
 use Neos\Flow\Mvc;
 use Neos\Flow\Annotations as Flow;
+use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 
 /**
  * @Flow\Scope("singleton")
@@ -21,6 +25,23 @@ class ContextBuilder
      * @var string
      */
     protected $urlSchemeAndHost;
+
+    /**
+     * @Flow\Inject
+     * @var UriFactoryInterface
+     */
+    protected $uriFactory;
+
+    /**
+     * @Flow\Inject
+     * @var ServerRequestFactoryInterface
+     */
+    protected $requestFactory;
+
+    /**
+     * @var Mvc\ActionRequestFactory
+     */
+    protected $actionRequestFactory;
 
     /**
      * @var ControllerContext
@@ -35,16 +56,19 @@ class ContextBuilder
 
     /**
      * @return ControllerContext
+     * @throws Mvc\Exception\InvalidActionNameException
+     * @throws Mvc\Exception\InvalidArgumentNameException
+     * @throws Mvc\Exception\InvalidArgumentTypeException
+     * @throws Mvc\Exception\InvalidControllerNameException
      */
     public function buildControllerContext(): ControllerContext
     {
         if(!($this->controllerContext instanceof ControllerContext)) {
-            $httpRequest = Http\Request::create(new Http\Uri($this->urlSchemeAndHost));
-            $httpRequest->setBaseUri(new Http\Uri($this->urlSchemeAndHost));
-
+            $httpRequest = $this->requestFactory->createServerRequest('get', $this->uriFactory->createUri($this->urlSchemeAndHost));
+            $httpRequest = $httpRequest->withAttribute(ServerRequestAttributes::BASE_URI, $this->uriFactory->createUri($this->urlSchemeAndHost));
             $this->controllerContext = new ControllerContext(
-                new Mvc\ActionRequest($httpRequest),
-                new Http\Response(),
+                $this->actionRequestFactory->createActionRequest($httpRequest),
+                new Mvc\ActionResponse(),
                 new Mvc\Controller\Arguments(),
                 new Mvc\Routing\UriBuilder()
             );
