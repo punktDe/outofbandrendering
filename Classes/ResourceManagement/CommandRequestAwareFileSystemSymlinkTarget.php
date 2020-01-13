@@ -9,12 +9,19 @@ namespace PunktDe\OutOfBandRendering\ResourceManagement;
  * source code.
  */
 
-
+use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandRequestHandler;
+use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\ResourceManagement\Target\FileSystemSymlinkTarget;
 
 class CommandRequestAwareFileSystemSymlinkTarget extends FileSystemSymlinkTarget
 {
+    /**
+     * @Flow\Inject
+     * @var Bootstrap
+     */
+    protected $bootstrap;
+
     protected function detectResourcesBaseUri()
     {
         $requestHandler = $this->bootstrap->getActiveRequestHandler();
