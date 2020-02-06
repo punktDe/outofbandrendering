@@ -12,6 +12,17 @@ This can be useful for example to render complex input for indexing into an Elas
 $ composer require punktde/outofbandrendering
 ```
 
+### Configuration
+
+You'll need to set the base URI.
+
+```yaml
+Neos:
+  Flow:
+    http:
+      baseUri: https://example.com/
+```
+
 ### Example
 
 Settings.yaml

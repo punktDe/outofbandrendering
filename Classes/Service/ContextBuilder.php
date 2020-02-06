@@ -8,7 +8,6 @@ namespace PunktDe\OutOfBandRendering\Service;
  *  All rights reserved.
  */
 
-use Neos\Flow\Http\ServerRequestAttributes;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\Mvc;
 use Neos\Flow\Annotations as Flow;
@@ -66,7 +65,6 @@ class ContextBuilder
     {
         if(!($this->controllerContext instanceof ControllerContext)) {
             $httpRequest = $this->requestFactory->createServerRequest('get', $this->uriFactory->createUri($this->urlSchemeAndHost));
-            $httpRequest = $httpRequest->withAttribute(ServerRequestAttributes::BASE_URI, $this->uriFactory->createUri($this->urlSchemeAndHost));
             $this->controllerContext = new ControllerContext(
                 $this->actionRequestFactory->createActionRequest($httpRequest),
                 new Mvc\ActionResponse(),
