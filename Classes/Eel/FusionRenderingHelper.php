@@ -25,7 +25,7 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
     /**
      * @param NodeInterface $node
      * @param string $fusionPath
-     * @return string
+     * @return mixed
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
@@ -39,13 +39,13 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      * @param string $fusionPath
      * @param string $workspace
      * @param array $contextData
-     * @return string
+     * @return mixed
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
     public function renderByIdentifier($nodeIdentifier, $fusionPath, $workspace = 'live', array $contextData = [])
     {
-        return $this->fusionRenderingService->renderByIdentifier($nodeIdentifier, $fusionPath);
+        return $this->fusionRenderingService->renderByIdentifier($nodeIdentifier, $fusionPath, $workspace, $contextData);
     }
 
     /**

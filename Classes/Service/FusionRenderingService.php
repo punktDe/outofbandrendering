@@ -55,6 +55,10 @@ class FusionRenderingService
      * @param string $fusionPath
      * @param array $contextData
      * @return string
+     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
@@ -107,11 +111,15 @@ class FusionRenderingService
      * @param string $fusionPath
      * @param string $workspace
      * @param array $contextData
-     * @return string
+     * @return mixed
+     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
-    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = []): string
+    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
     {
         $context = $this->createContentContext($workspace);
         $node = $context->getNodeByIdentifier($nodeIdentifier);
@@ -124,6 +132,10 @@ class FusionRenderingService
     /**
      * @param NodeInterface $currentSiteNode
      * @return Runtime
+     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
