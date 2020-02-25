@@ -23,7 +23,7 @@ class ContextBuilder
      * @Flow\InjectConfiguration(path="urlSchemaAndHost")
      * @var string
      */
-    protected $urlSchemeAndHost;
+    protected $urlSchemeAndHostFromConfiguration;
 
     /**
      * @Flow\Inject
@@ -48,23 +48,29 @@ class ContextBuilder
      */
     protected $controllerContext;
 
-    public function initializeObject()
+    public function initializeObject(): void
     {
         // we want to have nice URLs
         putenv('FLOW_REWRITEURLS=1');
     }
 
     /**
+     * @param string $urlSchemaAndHost Can be set if known (eg from the primary domain retrieved from the domain repository)
      * @return ControllerContext
+     *
      * @throws Mvc\Exception\InvalidActionNameException
      * @throws Mvc\Exception\InvalidArgumentNameException
      * @throws Mvc\Exception\InvalidArgumentTypeException
      * @throws Mvc\Exception\InvalidControllerNameException
      */
-    public function buildControllerContext(): ControllerContext
+    public function buildControllerContext(string $urlSchemaAndHost = ''): ControllerContext
     {
-        if(!($this->controllerContext instanceof ControllerContext)) {
-            $httpRequest = $this->requestFactory->createServerRequest('get', $this->uriFactory->createUri($this->urlSchemeAndHost));
+        if ($urlSchemaAndHost === '') {
+            $urlSchemaAndHost = $this->urlSchemeAndHostFromConfiguration;
+        }
+
+        if (!($this->controllerContext instanceof ControllerContext)) {
+            $httpRequest = $this->requestFactory->createServerRequest('get', $this->uriFactory->createUri($urlSchemaAndHost));
             $this->controllerContext = new ControllerContext(
                 $this->actionRequestFactory->createActionRequest($httpRequest),
                 new Mvc\ActionResponse(),
