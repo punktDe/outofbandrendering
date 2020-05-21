@@ -12,11 +12,19 @@ namespace PunktDe\OutOfBandRendering\Service;
 use Neos\Flow\Annotations as Flow;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\I18n\Exception\InvalidLocaleIdentifierException;
+use Neos\Flow\Log\ThrowableStorageInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
+use Neos\Flow\Mvc\Exception\InvalidActionNameException;
+use Neos\Flow\Mvc\Exception\InvalidArgumentNameException;
+use Neos\Flow\Mvc\Exception\InvalidArgumentTypeException;
+use Neos\Flow\Mvc\Exception\InvalidControllerNameException;
 use Neos\Fusion\Core\Runtime;
 use Neos\Neos\Controller\CreateContentContextTrait;
 use Neos\Flow\I18n\Service;
 use Neos\Flow\I18n\Locale;
+use Neos\Neos\Domain\Exception;
 use Neos\Neos\Domain\Service\FusionService;
+use Psr\Log\LoggerInterface;
 
 class FusionRenderingService
 {
@@ -51,18 +59,30 @@ class FusionRenderingService
     protected $options = ['enableContentCache' => true];
 
     /**
+     * @Flow\Inject
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * @Flow\Inject
+     * @var ThrowableStorageInterface
+     */
+    protected $throwableStorage;
+
+    /**
      * @param NodeInterface $node
      * @param string $fusionPath
      * @param array $contextData
-     * @return string
-     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
+     * @return mixed
+     * @throws InvalidActionNameException
+     * @throws InvalidArgumentNameException
+     * @throws InvalidArgumentTypeException
+     * @throws InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
-     * @throws \Neos\Neos\Domain\Exception
+     * @throws Exception
      */
-    public function render(NodeInterface $node, string $fusionPath, array $contextData = []): string
+    public function render(NodeInterface $node, string $fusionPath, array $contextData = [])
     {
         if (!$node instanceof NodeInterface || $node === null) {
             return '';
@@ -83,8 +103,9 @@ class FusionRenderingService
                     'strict' => false,
                     'order' => array_reverse($dimensions['language'])
                 ]);
-            } catch (InvalidLocaleIdentifierException $e) {
-                // TODO: implement logging
+            } catch (InvalidLocaleIdentifierException $exception) {
+                $logMessage = $this->throwableStorage->logThrowable($exception);
+                $this->logger->error($logMessage, LogEnvironment::fromMethodName(__METHOD__));
             }
         }
 
@@ -99,8 +120,9 @@ class FusionRenderingService
             $output = $fusionRuntime->render($fusionPath);
             $fusionRuntime->popContext();
             return $output;
-        } catch (\Exception $e) {
-            // TODO: implement logging
+        } catch (\Exception $exception) {
+            $logMessage = $this->throwableStorage->logThrowable($exception);
+            $this->logger->error($logMessage, LogEnvironment::fromMethodName(__METHOD__));
         }
 
         return '';
@@ -112,12 +134,12 @@ class FusionRenderingService
      * @param string $workspace
      * @param array $contextData
      * @return mixed
-     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
+     * @throws InvalidActionNameException
+     * @throws InvalidArgumentNameException
+     * @throws InvalidArgumentTypeException
+     * @throws InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
-     * @throws \Neos\Neos\Domain\Exception
+     * @throws Exception
      */
     public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
     {
@@ -132,12 +154,12 @@ class FusionRenderingService
     /**
      * @param NodeInterface $currentSiteNode
      * @return Runtime
-     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
+     * @throws InvalidActionNameException
+     * @throws InvalidArgumentNameException
+     * @throws InvalidArgumentTypeException
+     * @throws InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
-     * @throws \Neos\Neos\Domain\Exception
+     * @throws Exception
      */
     protected function getFusionRuntime(NodeInterface $currentSiteNode): Runtime
     {
