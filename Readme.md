@@ -39,7 +39,5 @@ Render the quick-link during index time using the given prototypePath:
     __myProperty:
       search:
         elasticSearchMapping:
-          type: string
-          index: not_analyzed
-          include_in_all: false
+          type: keyword
         indexing: '${FusionRendering.render(node, "pathToProtoType")}'
