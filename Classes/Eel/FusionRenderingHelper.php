@@ -26,10 +26,14 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      * @param NodeInterface $node
      * @param string $fusionPath
      * @return mixed
+     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */
-    public function render(NodeInterface $node, $fusionPath)
+    public function render(NodeInterface $node, string $fusionPath)
     {
         return $this->fusionRenderingService->render($node, $fusionPath);
     }
@@ -40,6 +44,10 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
      * @param string $workspace
      * @param array $contextData
      * @return mixed
+     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
+     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
      * @throws \Neos\Fusion\Exception
      * @throws \Neos\Neos\Domain\Exception
      */

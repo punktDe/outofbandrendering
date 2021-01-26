@@ -8,9 +8,13 @@ namespace PunktDe\OutOfBandRendering\Service;
  *  All rights reserved.
  */
 
+use Neos\Flow\Http\ServerRequestAttributes;
+use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Mvc\Controller\ControllerContext;
 use Neos\Flow\Mvc;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Mvc\Routing\Dto\RouteParameters;
+use Neos\Flow\Mvc\Routing\UriBuilder;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 
@@ -57,25 +61,30 @@ class ContextBuilder
     /**
      * @param string $urlSchemaAndHost Can be set if known (eg from the primary domain retrieved from the domain repository)
      * @return ControllerContext
-     *
-     * @throws Mvc\Exception\InvalidActionNameException
-     * @throws Mvc\Exception\InvalidArgumentNameException
-     * @throws Mvc\Exception\InvalidArgumentTypeException
-     * @throws Mvc\Exception\InvalidControllerNameException
      */
     public function buildControllerContext(string $urlSchemaAndHost = ''): ControllerContext
     {
         if ($urlSchemaAndHost === '') {
             $urlSchemaAndHost = $this->urlSchemeAndHostFromConfiguration;
         }
+        $requestUri = $this->uriFactory->createUri($urlSchemaAndHost);
+
+        $httpRequest = $this->requestFactory->createServerRequest('get', $requestUri);
+        $parameters = $httpRequest->getAttribute(ServerRequestAttributes::ROUTING_PARAMETERS) ?? RouteParameters::createEmpty();
+        $httpRequest = $httpRequest->withAttribute(ServerRequestAttributes::ROUTING_PARAMETERS, $parameters->withParameter('requestUriHost', $requestUri->getHost()));
+
+        $request = ActionRequest::fromHttpRequest($httpRequest);
+        $request->setFormat('html');
+
+        $uriBuilder = new UriBuilder();
+        $uriBuilder->setRequest($request);
 
         if (!($this->controllerContext instanceof ControllerContext)) {
-            $httpRequest = $this->requestFactory->createServerRequest('get', $this->uriFactory->createUri($urlSchemaAndHost));
             $this->controllerContext = new ControllerContext(
-                $this->actionRequestFactory->createActionRequest($httpRequest),
+                $request,
                 new Mvc\ActionResponse(),
-                new Mvc\Controller\Arguments(),
-                new Mvc\Routing\UriBuilder()
+                new Mvc\Controller\Arguments([]),
+                $uriBuilder
             );
         }
 
