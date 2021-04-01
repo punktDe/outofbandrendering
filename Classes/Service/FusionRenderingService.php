@@ -84,15 +84,17 @@ class FusionRenderingService
      */
     public function render(NodeInterface $node, string $fusionPath, array $contextData = [])
     {
-        if (!$node instanceof NodeInterface || $node === null) {
-            return '';
-        }
-
         $dimensions = $node->getDimensions();
         $context = $this->createContentContext($node->getWorkspace()->getName(), $dimensions);
         $node = $context->getNodeByIdentifier($node->getIdentifier());
 
         $currentSiteNode = $context->getCurrentSiteNode();
+
+        if (!$currentSiteNode instanceof NodeInterface) {
+            $this->logger->error(sprintf('Could not get the current site node for node "%s". Rendering skipped.', (string)$node), LogEnvironment::fromMethodName(__METHOD__));
+            return '';
+        }
+
         $fusionRuntime = $this->getFusionRuntime($currentSiteNode);
 
         if (array_key_exists('language', $dimensions) && $dimensions['language'] !== []) {
