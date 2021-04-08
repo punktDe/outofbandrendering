@@ -85,7 +85,8 @@ class FusionRenderingService
     public function render(NodeInterface $node, string $fusionPath, array $contextData = [])
     {
         $dimensions = $node->getDimensions();
-        $context = $this->createContentContext($node->getWorkspace()->getName(), $dimensions);
+        $context = $this->createContextMatchingNodeData($node->getNodeData());
+
         $node = $context->getNodeByIdentifier($node->getIdentifier());
 
         $currentSiteNode = $context->getCurrentSiteNode();
