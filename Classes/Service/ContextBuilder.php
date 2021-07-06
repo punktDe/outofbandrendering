@@ -16,6 +16,7 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Routing\Dto\RouteParameters;
 use Neos\Flow\Mvc\Routing\UriBuilder;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriFactoryInterface;
 
 /**
@@ -41,16 +42,17 @@ class ContextBuilder
      */
     protected $requestFactory;
 
-    /**
-     * @Flow\Inject
-     * @var Mvc\ActionRequestFactory
-     */
-    protected $actionRequestFactory;
 
     /**
      * @var ControllerContext
      */
     protected $controllerContext;
+
+
+    /**
+     * @var ServerRequestInterface
+     */
+    protected $httpRequest = null;
 
     public function initializeObject(): void
     {
@@ -60,6 +62,7 @@ class ContextBuilder
 
     /**
      * @param string $urlSchemaAndHost Can be set if known (eg from the primary domain retrieved from the domain repository)
+     * @param ServerRequestInterface|null $httpRequest
      * @return ControllerContext
      */
     public function buildControllerContext(string $urlSchemaAndHost = ''): ControllerContext
@@ -69,7 +72,7 @@ class ContextBuilder
         }
         $requestUri = $this->uriFactory->createUri($urlSchemaAndHost);
 
-        $httpRequest = $this->requestFactory->createServerRequest('get', $requestUri);
+        $httpRequest = $this->httpRequest ?? $this->requestFactory->createServerRequest('get', $requestUri);
         $parameters = $httpRequest->getAttribute(ServerRequestAttributes::ROUTING_PARAMETERS) ?? RouteParameters::createEmpty();
         $httpRequest = $httpRequest->withAttribute(ServerRequestAttributes::ROUTING_PARAMETERS, $parameters->withParameter('requestUriHost', $requestUri->getHost()));
 
@@ -89,5 +92,11 @@ class ContextBuilder
         }
 
         return $this->controllerContext;
+    }
+
+    public function setHttpRequest(ServerRequestInterface $httpRequest): self
+    {
+        $this->httpRequest = $httpRequest;
+        return $this;
     }
 }
