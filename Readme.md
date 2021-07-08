@@ -8,7 +8,7 @@ This can be useful for example to render complex input for indexing into an Elas
 
 ### Installation
 
-```
+```bash
 $ composer require punktde/outofbandrendering
 ```
 
