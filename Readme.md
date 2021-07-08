@@ -8,7 +8,7 @@ This can be useful for example to render complex input for indexing into an Elas
 
 ### Installation
 
-```
+```bash
 $ composer require punktde/outofbandrendering
 ```
 
@@ -25,19 +25,21 @@ Neos:
 
 ### Example
 
-Settings.yaml
+In our Settings.yaml
 
-    Neos:
-      ContentRepository:
-        Search:
-          defaultContext:
-            FusionRendering: PunktDe\OutOfBandRendering\Eel\FusionRenderingHelper
-
-
+```yaml
+Neos:
+  ContentRepository:
+    Search:
+      defaultContext:
+        FusionRendering: PunktDe\OutOfBandRendering\Eel\FusionRenderingHelper
+```
 Render the quick-link during index time using the given prototypePath:
 
-    __myProperty:
-      search:
-        elasticSearchMapping:
-          type: keyword
-        indexing: '${FusionRendering.render(node, "pathToProtoType")}'
+```yaml
+__myProperty:
+  search:
+    elasticSearchMapping:
+      type: keyword
+    indexing: '${FusionRendering.render(node, "pathToProtoType")}'
+```
