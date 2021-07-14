@@ -2,7 +2,8 @@
 
 [![Latest Stable Version](https://poser.pugx.org/punktde/outofbandrendering/v/stable)](https://packagist.org/packages/punktde/outofbandrendering) [![Total Downloads](https://poser.pugx.org/punktde/outofbandrendering/downloads)](https://packagist.org/packages/punktde/outofbandrendering)
 
-Supplies an EelHelper to do out of band rendering of fusion objects.
+* Suplies a factory for building a ControllerContext out of a CLI request, that puts everything in place for rendering fusion code, includign node and resource links. 
+* Supplies an EelHelper to do out of band rendering of fusion objects.
 
 This can be useful for example to render complex input for indexing into an Elasticsearch index. 
 
@@ -34,7 +35,7 @@ Neos:
       defaultContext:
         FusionRendering: PunktDe\OutOfBandRendering\Eel\FusionRenderingHelper
 ```
-Render the quick-link during index time using the given prototypePath:
+Render a suggestion during index time using the given prototypePath:
 
 ```yaml
 __myProperty:
