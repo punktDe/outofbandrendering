@@ -15,7 +15,7 @@ $ composer require punktde/outofbandrendering
 
 ### Configuration
 
-You'll need to set the base URI.
+You'll may set the base URI used in CLI context. If not "/" and "http://localhost" is used.
 
 ```yaml
 Neos:
