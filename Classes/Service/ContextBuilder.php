@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace PunktDe\OutOfBandRendering\Service;
 
 /*
- *  (c) 2018 punkt.de GmbH - Karlsruhe, Germany - http://punkt.de
+ *  (c) 2018-2021 punkt.de GmbH - Karlsruhe, Germany - http://punkt.de
  *  All rights reserved.
  */
 
+use Neos\Flow\Http\BaseUriProvider;
 use Neos\Flow\Http\ServerRequestAttributes;
 use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Mvc\Controller\ControllerContext;
@@ -15,6 +16,7 @@ use Neos\Flow\Mvc;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Routing\Dto\RouteParameters;
 use Neos\Flow\Mvc\Routing\UriBuilder;
+use Neos\Utility\ObjectAccess;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriFactoryInterface;
@@ -42,12 +44,16 @@ class ContextBuilder
      */
     protected $requestFactory;
 
-
     /**
      * @var ControllerContext
      */
     protected $controllerContext;
 
+    /**
+     * @Flow\Inject
+     * @var BaseUriProvider
+     */
+    protected $baseUriProvider;
 
     /**
      * @var ServerRequestInterface
@@ -67,6 +73,8 @@ class ContextBuilder
      */
     public function buildControllerContext(string $urlSchemaAndHost = ''): ControllerContext
     {
+        $this->setBaseUriInBaseUriProviderIfNotSet($urlSchemaAndHost);
+
         if ($urlSchemaAndHost === '') {
             $urlSchemaAndHost = $this->urlSchemeAndHostFromConfiguration;
         }
@@ -98,5 +106,16 @@ class ContextBuilder
     {
         $this->httpRequest = $httpRequest;
         return $this;
+    }
+
+    protected function setBaseUriInBaseUriProviderIfNotSet(string $urlSchemaAndHost = ''): void
+    {
+        $urlSchemaAndHost = $urlSchemaAndHost === '' ? '/' : $urlSchemaAndHost;
+
+        try {
+            $this->baseUriProvider->getConfiguredBaseUriOrFallbackToCurrentRequest();
+        } catch (\Exception $exception) {
+            ObjectAccess::setProperty($this->baseUriProvider, 'configuredBaseUri', $urlSchemaAndHost, true);
+        }
     }
 }
