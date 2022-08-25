@@ -66,6 +66,16 @@ class ContextBuilder
         putenv('FLOW_REWRITEURLS=1');
     }
 
+    public static function buildControllerContextFromActionRequest(ActionRequest $actionRequest): ControllerContext
+    {
+        return new ControllerContext(
+            $actionRequest,
+            new Mvc\ActionResponse(),
+            new Mvc\Controller\Arguments([]),
+            self::getUriBuilderFromActionRequest($actionRequest)
+        );
+    }
+
     /**
      * @param string $urlSchemaAndHost Can be set if known (eg from the primary domain retrieved from the domain repository)
      * @param ServerRequestInterface|null $httpRequest
@@ -73,6 +83,10 @@ class ContextBuilder
      */
     public function buildControllerContext(string $urlSchemaAndHost = ''): ControllerContext
     {
+        if ($this->controllerContext instanceof ControllerContext) {
+            return $this->controllerContext;
+        }
+
         $this->setBaseUriInBaseUriProviderIfNotSet($urlSchemaAndHost);
 
         if ($urlSchemaAndHost === '') {
@@ -84,21 +98,10 @@ class ContextBuilder
         $parameters = $httpRequest->getAttribute(ServerRequestAttributes::ROUTING_PARAMETERS) ?? RouteParameters::createEmpty();
         $httpRequest = $httpRequest->withAttribute(ServerRequestAttributes::ROUTING_PARAMETERS, $parameters->withParameter('requestUriHost', $requestUri->getHost()));
 
-        $request = ActionRequest::fromHttpRequest($httpRequest);
-        $request->setFormat('html');
-
-        $uriBuilder = new UriBuilder();
-        $uriBuilder->setRequest($request);
-
-        if (!($this->controllerContext instanceof ControllerContext)) {
-            $this->controllerContext = new ControllerContext(
-                $request,
-                new Mvc\ActionResponse(),
-                new Mvc\Controller\Arguments([]),
-                $uriBuilder
-            );
-        }
-
+        $actionRequest = ActionRequest::fromHttpRequest($httpRequest);
+        $actionRequest->setFormat('html');
+        
+        $this->controllerContext = self::buildControllerContextFromActionRequest($actionRequest);
         return $this->controllerContext;
     }
 
@@ -117,5 +120,16 @@ class ContextBuilder
         } catch (\Exception $exception) {
             ObjectAccess::setProperty($this->baseUriProvider, 'configuredBaseUri', $urlSchemaAndHost, true);
         }
+    }
+
+    /**
+     * @param ActionRequest $actionRequest
+     * @return UriBuilder
+     */
+    private static function getUriBuilderFromActionRequest(ActionRequest $actionRequest): UriBuilder
+    {
+        $uriBuilder = new UriBuilder();
+        $uriBuilder->setRequest($actionRequest);
+        return $uriBuilder;
     }
 }
