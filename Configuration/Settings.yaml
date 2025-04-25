@@ -1,3 +1,5 @@
 PunktDe:
   OutOfBandRendering:
     urlSchemaAndHost: 'http://localhost'
+    fusionAutoInclude:
+      'Neos.Fusion': true

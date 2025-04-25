@@ -9,181 +9,91 @@ namespace PunktDe\OutOfBandRendering\Service;
  * source code.
  */
 
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
-use Neos\ContentRepository\Domain\Model\NodeInterface;
-use Neos\Flow\I18n\Exception\InvalidLocaleIdentifierException;
-use Neos\Flow\Log\ThrowableStorageInterface;
-use Neos\Flow\Log\Utility\LogEnvironment;
-use Neos\Flow\Mvc\Exception\InvalidActionNameException;
-use Neos\Flow\Mvc\Exception\InvalidArgumentNameException;
-use Neos\Flow\Mvc\Exception\InvalidArgumentTypeException;
-use Neos\Flow\Mvc\Exception\InvalidControllerNameException;
-use Neos\Fusion\Core\Runtime;
-use Neos\Neos\Controller\CreateContentContextTrait;
-use Neos\Flow\I18n\Service;
-use Neos\Flow\I18n\Locale;
-use Neos\Neos\Domain\Exception;
-use Neos\Neos\Domain\Service\FusionService;
-use Psr\Log\LoggerInterface;
+use Neos\Flow\Package\PackageManager;
+use Neos\Fusion\View\FusionView;
+use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 
+/**
+ * @Flow\Scope("singleton")
+ */
 class FusionRenderingService
 {
-    use CreateContentContextTrait;
-
-    /**
-     * @Flow\Inject
-     * @var Service
-     */
-    protected $i18nService;
-
-    /**
-     * @var Runtime
-     */
-    protected $fusionRuntime;
-
-    /**
-     * @Flow\Inject
-     * @var FusionService
-     */
-    protected $fusionService;
-
-    /**
-     * @Flow\Inject
-     * @var ContextBuilder
-     */
-    protected $contextBuilder;
 
     /**
      * @var array
      */
-    protected $options = ['enableContentCache' => true];
+    #[Flow\InjectConfiguration(path: 'fusionAutoInclude')]
+    protected $packagesForFusionAutoInclude;
 
-    /**
-     * @Flow\Inject
-     * @var LoggerInterface
-     */
-    protected $logger;
 
-    /**
-     * @Flow\Inject
-     * @var ThrowableStorageInterface
-     */
-    protected $throwableStorage;
+    public function __construct(
+        private readonly PackageManager            $packageManager,
+        private readonly ContentRepositoryRegistry $contentRepositoryRegistry,
+        private readonly ContextBuilder            $contextBuilder,
+    ) {
+    }
 
-    /**
-     * @param NodeInterface $node
-     * @param string $fusionPath
-     * @param array $contextData
-     * @return mixed
-     * @throws InvalidActionNameException
-     * @throws InvalidArgumentNameException
-     * @throws InvalidArgumentTypeException
-     * @throws InvalidControllerNameException
-     * @throws \Neos\Fusion\Exception
-     * @throws Exception
-     */
-    public function render(NodeInterface $node, string $fusionPath, array $contextData = [])
+    public function render(Node $node, string $fusionPath, array $contextData = [])
     {
-        $dimensions = $node->getDimensions();
-        $context = $this->createContextMatchingNodeData($node->getNodeData());
+        $fusionView = new FusionView();
 
-        $node = $context->getNodeByIdentifier($node->getIdentifier());
+        // TODO: Useless?
+        $fusionView->setPackageKey('PunktDe.OutOfBandRendering');
 
-        $currentSiteNode = $context->getCurrentSiteNode();
+        $subgraph = $this->contentRepositoryRegistry->subgraphForNode($node);
+        $currentSiteNode = $subgraph->findClosestNode($node->aggregateId, FindClosestNodeFilter::create(nodeTypes: NodeTypeNameFactory::NAME_SITE));
 
-        if (!$currentSiteNode instanceof NodeInterface) {
-            $this->logger->error(sprintf('Could not get the current site node for node "%s". Rendering skipped.', (string)$node), LogEnvironment::fromMethodName(__METHOD__));
-            return '';
-        }
-
-        $fusionRuntime = $this->getFusionRuntime($currentSiteNode);
-
-        if (array_key_exists('language', $dimensions) && $dimensions['language'] !== []) {
-            try {
-                $currentLocale = new Locale($dimensions['language'][0]);
-                $this->i18nService->getConfiguration()->setCurrentLocale($currentLocale);
-                $this->i18nService->getConfiguration()->setFallbackRule([
-                    'strict' => false,
-                    'order' => array_reverse($dimensions['language'])
-                ]);
-            } catch (InvalidLocaleIdentifierException $exception) {
-                $logMessage = $this->throwableStorage->logThrowable($exception);
-                $this->logger->error($logMessage, LogEnvironment::fromMethodName(__METHOD__));
-            }
-        }
-
-        $fusionRuntime->pushContextArray(array_merge([
+        $fusionView->assignMultiple([
             'node' => $node,
             'documentNode' => $this->getClosestDocumentNode($node) ?: $node,
+            'request' => $this->contextBuilder->buildControllerContext()->getRequest(),
             'site' => $currentSiteNode,
-            'editPreviewMode' => null,
-        ], $contextData));
+        ]);
 
-        try {
-            $output = $fusionRuntime->render($fusionPath);
-            $fusionRuntime->popContext();
-            return $output;
-        } catch (\Exception $exception) {
-            $logMessage = $this->throwableStorage->logThrowable($exception);
-            $this->logger->error($logMessage, LogEnvironment::fromMethodName(__METHOD__));
-        }
+        $fusionView->setFusionPathPatterns(array_map(function (string $value) {
+            return $this->packageManager->getPackage($value)->getResourcesPath() . 'Private/Fusion';
+        }, array_keys(array_filter($this->packagesForFusionAutoInclude))));
 
-        return '';
+
+        $fusionView->setFusionPath($fusionPath);
+
+        return $fusionView->render();
     }
 
-    /**
-     * @param string $nodeIdentifier
-     * @param string $fusionPath
-     * @param string $workspace
-     * @param array $contextData
-     * @return mixed
-     * @throws InvalidActionNameException
-     * @throws InvalidArgumentNameException
-     * @throws InvalidArgumentTypeException
-     * @throws InvalidControllerNameException
-     * @throws \Neos\Fusion\Exception
-     * @throws Exception
-     */
-    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
+//
+//    /**
+//     * @param string $nodeIdentifier
+//     * @param string $fusionPath
+//     * @param string $workspace
+//     * @param array $contextData
+//     * @return mixed
+//     * @throws InvalidActionNameException
+//     * @throws InvalidArgumentNameException
+//     * @throws InvalidArgumentTypeException
+//     * @throws InvalidControllerNameException
+//     * @throws \Neos\Fusion\Exception
+//     * @throws Exception
+//     */
+//    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
+//    {
+//        $context = $this->createContentContext($workspace);
+//        $node = $context->getNodeByIdentifier($nodeIdentifier);
+//        if ($node !== null) {
+//            return $this->render($node, $fusionPath, $contextData);
+//        }
+//        return '';
+//    }
+//
+
+    private function getClosestDocumentNode(Node $node): Node
     {
-        $context = $this->createContentContext($workspace);
-        $node = $context->getNodeByIdentifier($nodeIdentifier);
-        if ($node !== null) {
-            return $this->render($node, $fusionPath, $contextData);
-        }
-        return '';
-    }
+        $nodeTypeManager = $this->contentRepositoryRegistry->get($node->contentRepositoryId)->getNodeTypeManager();
 
-    /**
-     * @param NodeInterface $currentSiteNode
-     * @return Runtime
-     * @throws InvalidActionNameException
-     * @throws InvalidArgumentNameException
-     * @throws InvalidArgumentTypeException
-     * @throws InvalidControllerNameException
-     * @throws \Neos\Fusion\Exception
-     * @throws Exception
-     */
-    protected function getFusionRuntime(NodeInterface $currentSiteNode): Runtime
-    {
-        if ($this->fusionRuntime === null) {
-            $this->fusionRuntime = $this->fusionService->createRuntime($currentSiteNode, $this->contextBuilder->buildControllerContext());
-
-            if (isset($this->options['enableContentCache']) && $this->options['enableContentCache'] !== null) {
-                $this->fusionRuntime->setEnableContentCache($this->options['enableContentCache']);
-            }
-        }
-
-        return $this->fusionRuntime;
-    }
-
-    /**
-     * @param NodeInterface $node
-     * @return NodeInterface
-     */
-    protected function getClosestDocumentNode(NodeInterface $node): NodeInterface
-    {
-        while ($node !== null && !$node->getNodeType()->isOfType('Neos.Neos:Document')) {
+        while ($node !== null && !$nodeTypeManager->getNodeType($node->nodeTypeName)->isOfType('Neos.Neos:Document')) {
             $node = $node->getParent();
         }
 
