@@ -9,8 +9,13 @@ namespace PunktDe\OutOfBandRendering\Service;
  * source code.
  */
 
+use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Package\PackageManager;
@@ -22,13 +27,8 @@ use Neos\Neos\Domain\Service\NodeTypeNameFactory;
  */
 class FusionRenderingService
 {
-
-    /**
-     * @var array
-     */
     #[Flow\InjectConfiguration(path: 'fusionAutoInclude')]
-    protected $packagesForFusionAutoInclude;
-
+    protected array $packagesForFusionAutoInclude;
 
     public function __construct(
         private readonly PackageManager            $packageManager,
@@ -61,33 +61,25 @@ class FusionRenderingService
 
         $fusionView->setFusionPath($fusionPath);
 
-        return $fusionView->render();
+        return (string)$fusionView->render();
     }
 
-//
-//    /**
-//     * @param string $nodeIdentifier
-//     * @param string $fusionPath
-//     * @param string $workspace
-//     * @param array $contextData
-//     * @return mixed
-//     * @throws InvalidActionNameException
-//     * @throws InvalidArgumentNameException
-//     * @throws InvalidArgumentTypeException
-//     * @throws InvalidControllerNameException
-//     * @throws \Neos\Fusion\Exception
-//     * @throws Exception
-//     */
-//    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
-//    {
-//        $context = $this->createContentContext($workspace);
-//        $node = $context->getNodeByIdentifier($nodeIdentifier);
-//        if ($node !== null) {
-//            return $this->render($node, $fusionPath, $contextData);
-//        }
-//        return '';
-//    }
-//
+    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspaceNameString = 'live', array $contextData = [])
+    {
+        $nodeAggregateId = NodeAggregateId::fromString($nodeIdentifier);
+        $contentRepository = $this->contentRepositoryRegistry->get(ContentRepositoryId::fromString('default'));
+        $workspaceName = $workspaceNameString !== 'live' ? WorkspaceName::fromString($workspaceNameString) : WorkspaceName::forLive();
+        $visibilityConstraints = VisibilityConstraints::createEmpty();
+        $dimensionSpacePoint = DimensionSpacePoint::createWithoutDimensions();
+
+        $subgraph = $contentRepository->getContentGraph($workspaceName)->getSubgraph($dimensionSpacePoint, $visibilityConstraints);
+        $node = $subgraph->findNodeById($nodeAggregateId);
+
+        if ($node !== null) {
+            return $this->render($node, $fusionPath, $contextData);
+        }
+        return '';
+    }
 
     private function getClosestDocumentNode(Node $node): Node
     {

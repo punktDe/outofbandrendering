@@ -19,41 +19,18 @@ class FusionRenderingHelper implements ProtectedContextAwareInterface
     #[Flow\Inject]
     protected FusionRenderingService $fusionRenderingService;
 
-    /**
-     * @return mixed
-     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
-     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
-     * @throws \Neos\Fusion\Exception
-     * @throws \Neos\Neos\Domain\Exception
-     */
     public function render(Node $node, string $fusionPath)
     {
         return $this->fusionRenderingService->render($node, $fusionPath);
     }
-//
-//    /**
-//     * @param string $nodeIdentifier
-//     * @param string $fusionPath
-//     * @param string $workspace
-//     * @param array $contextData
-//     * @return mixed
-//     * @throws \Neos\Flow\Mvc\Exception\InvalidActionNameException
-//     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentNameException
-//     * @throws \Neos\Flow\Mvc\Exception\InvalidArgumentTypeException
-//     * @throws \Neos\Flow\Mvc\Exception\InvalidControllerNameException
-//     * @throws \Neos\Fusion\Exception
-//     * @throws \Neos\Neos\Domain\Exception
-//     */
-//    public function renderByIdentifier($nodeIdentifier, $fusionPath, $workspace = 'live', array $contextData = [])
-//    {
-//        return $this->fusionRenderingService->renderByIdentifier($nodeIdentifier, $fusionPath, $workspace, $contextData);
-//    }
+
+    public function renderByIdentifier(string $nodeIdentifier, string $fusionPath, string $workspace = 'live', array $contextData = [])
+    {
+        return $this->fusionRenderingService->renderByIdentifier($nodeIdentifier, $fusionPath, $workspace, $contextData);
+    }
 
     public function allowsCallOfMethod($methodName): bool
     {
         return true;
     }
-
 }
